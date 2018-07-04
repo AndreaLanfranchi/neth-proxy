@@ -10,19 +10,20 @@ This is a stratum to stratum proxy expressly designed to optimize [ethminer](htt
 * Ensures all connected [ethminer](https://github.com/ethereum-mining/ethminer) miners do work on **non overlapping** ranges of nonces
 * Clusters all your miners as if they were a single machine (if you have 5 rigs with 6 GPUs each you will mine as if you had a single rig made of 30 GPUs)
 * Jobs are **pushed** immediately to all connected miners. No need to set `--farm-recheck` values on ethminer.
-* 2% to 3% more efficient of eth-proxy
+* Reduced payout times by 3% to 5%
+* Less stale shares than with eth-proxy
 * Customizable `--work-timeout` and `--response-timeout` values to trigger fallback pools
 * Instant cumulative info about overall hashrate, connected miners, jobs received and solutions sumbitted with percent values of known stale shares and rejects
 * API interface to monitor cluster status or single miner. New methods being added
 
 ## Requirements
 neth-proxy is built on top of [.NET Core 2.0](https://github.com/dotnet/core) thus working without problems on Windows Linux or Mac. Coding language is VB.Net (_yeah I know know ... keep your comments about VB out of this_).
-All connected miner **must** be [ethminer](https://github.com/ethereum-mining/ethminer) min version 0.15.rc2. No other miner willing to connect is currently supported (maybe in future).
+All connected miner **must** be [ethminer](https://github.com/ethereum-mining/ethminer) min version 0.15.rc2 or better. No other miner willing to connect is currently supported (maybe in future).
 
 **Important. This proxy is NOT a tool to steal or reduce developer's fees for other miners**
 
 ## Who uses neth-proxy
-Well actually me and my clients
+Well actually me and my clients. Maybe if you want to submit a review I will publish it.
 
 ## How to get started with neth-proxy
 1. Install [.NET Core 2.0](https://github.com/dotnet/core) runtime 
