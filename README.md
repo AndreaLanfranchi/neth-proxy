@@ -77,7 +77,7 @@ When you're done with installation please check your installed version (How to g
 
 ## Download latest neth-proxy binary release 
 
-Access the (releases)[https://github.com/AndreaLanfranchi/neth-proxy/releases] section of this repository and pick the latest release.
+Access the [releases](https://github.com/AndreaLanfranchi/neth-proxy/releases) section of this repository and pick the latest release.
 Archive is in .zip format. Expand (uncompress) the archive in a directory of your choice.
 
 ## How to start neth-proxy and connect to it
