@@ -108,9 +108,9 @@ Syntax for connection is :
 ethminer [..] --api-port <nnnn> -P stratum+tcp://<neth-proxy-ip-address>:<neth-proxy-port>/<workername>/<nnnn>
 ```
 where 
-* <nnnn> is the port number where ethminer will listen on
-* <neth-proxy-ip-address> is the ip address of the computer where you're running neth-proxy
-* <neth-proxy-port> is the portnumber neth-proxy is listening for connections (default is 4444)
+* `<nnnn>` is the port number where ethminer will listen on
+* `<neth-proxy-ip-address>` is the ip address of the computer where you're running neth-proxy
+* `<neth-proxy-port>` is the portnumber neth-proxy is listening for connections (default is 4444)
 
 You do not need to set a wallet address as it's already configured in neth-proxy
 
