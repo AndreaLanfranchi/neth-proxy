@@ -189,8 +189,26 @@ How to connect your ethminer's instances to this proxy
 -----------------------------------------------------------------------------------------------------------------------
 ethminer 0.15.rc2 is minimum version required with API support enabled
 
-ethminer -P stratum+tcp://<neth-proxy-ipaddress>:<neth-proxy-bindport>/<workername>/<apiport>
+ethminer -P stratum+tcp://<neth-proxy-ipaddress>:<neth-proxy-bindport>/<workername>/<nnnn> --api-port <nnnn>
 
-where <apiport> is the API port ethminer is listening on
+where <nnnn> is the API port ethminer is listening on
+```
 
+## Ethash pools tested and supported
+ 
+| Pool Name | Pool Homepage | Details about connection |
+| --------- | ------------- | - |
+| 2miners.com | <https://2miners.com/> | <https://eth.2miners.com/en/help> |
+| dwarfpool.org | <https://dwarfpool.com/> | <https://dwarfpool.com/eth> |
+| ethermine.org | <https://ethermine.org/> | <https://ethermine.org/> |
+| ethpool.org | <https://www.ethpool.org/> | <https://www.ethpool.org/> |
+| f2pool.com | <https://www.f2pool.com/> | <https://www.f2pool.com/help/?#tab-content-eth> |
+| miningpoolhub.com | <https://miningpoolhub.com/> | <https://ethereum.miningpoolhub.com/> |
+| nanopool.org | <https://nanopool.org/> | <https://eth.nanopool.org/help> |
+| sparkpool.com | <https://sparkpool.com/> | <https://eth.sparkpool.com/> |
+ 
+Syntax to connect to those pools is always the same 
+ 
+```
+$ ./neth-proxy.sh -sp <wallet>@<pool-host-name>:<pool-port>
 ```
