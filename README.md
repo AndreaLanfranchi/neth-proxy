@@ -16,6 +16,18 @@ This is a stratum to stratum proxy expressly designed to optimize [ethminer](htt
 * Instant cumulative info about overall hashrate, connected miners, jobs received and solutions sumbitted with percent values of known stale shares and rejects
 * API interface to monitor cluster status or single miner. New methods being added
 
+## Developer Fees
+
+Usage of neth-proxy comes with a fee of 0.75% which means your connected miners will mine for the developer for 30 seconds every 4000 seconds (roughly 1 hour and 7 minutes).
+If you do not want to pay such a fee you can set `--no-fee` command line argument on launch. This will make neth-proxy absolutely free but it won't do any segment adjustment for your miners nor it will check they do not overlap.
+In any case you will get better results than with eth-proxy.
+Alternatively you can modify source code and rebuild the binaries on your own.
+
+If you wish to make a direct donation you're welcome to use either theese addresses:
+
+* ETH 0x9E431042fAA3224837e9BEDEcc5F4858cf0390B9
+* ETC 0x6e4Aa5064ced1c0e9E20A517B9d7A7dDe32A0dcf
+
 ## Requirements
 neth-proxy is built on top of [.NET Core 2.0](https://github.com/dotnet/core) thus working without problems on Windows Linux or Mac. Coding language is VB.Net (_yeah I know know ... keep your comments about VB out of this_).
 All connected miner **must** be [ethminer](https://github.com/ethereum-mining/ethminer) min version 0.15.rc2 or better. No other miner willing to connect is currently supported (maybe in future).
