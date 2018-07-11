@@ -1,7 +1,7 @@
 # neth-proxy
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg)](https://github.com/RichardLitt/standard-readme)
-[![Releases](https://img.shields.io/github/downloads/AndreaLanfranchi/neth-proxy/total.svg)][Releases]
+[![Issues](https://img.shields.io/github/issues/AndreaLanfranchi/neth-proxy.svg)][Issues]
 
 This is a stratum to stratum proxy expressly designed to optimize [ethminer](https://github.com/ethereum-mining/ethminer)'s multi instances: whether you run a single rig with a separate ethminer instance per GPU or you run multiple rigs each with it's own ethminer instance you may want to use neth-proxy.
 **If you run only one instance of ethminer then neth-proxy will not give you any benefit**
