@@ -13,17 +13,34 @@ This is a stratum to stratum proxy expressly designed to optimize [ethminer](htt
 * Ensures all connected [ethminer](https://github.com/ethereum-mining/ethminer) miners do work on **non overlapping** ranges of nonces
 * Clusters all your miners as if they were a single machine (if you have 5 rigs with 6 GPUs each you will mine as if you had a single rig made of 30 GPUs)
 * Jobs are **pushed** immediately to all connected miners. No need to set `--farm-recheck` values on ethminer.
-* Reduced payout times by 3% to 5%
+* Reduced payout times by 3% to 5% (measured from my personal experience)
 * Less stale shares than with eth-proxy
 * Customizable `--work-timeout` and `--response-timeout` values to trigger fallback pools
 * Instant cumulative info about overall hashrate, connected miners, jobs received and solutions sumbitted with percent values of known stale shares and rejects
 * API interface to monitor cluster status or single miner. New methods being added
 
+## Why you may want to use it
+
+If you're on a single rig you will not get any advantage from using neth-proxy. But if you're on a small farm (say 3 or more rigs) you may want to improve your mining experience by:
+* keeping a single connection to your pool of choice particularly when relying on a domestic internet connection
+* combine all your rigs in a single "clustered" machine which processes the **same** set of jobs (per rig connections to pool sends you different sets of jobs)
+* ensure all your rigs do effectively work on **non overlapping** ranges of nonces. When running single connections per rig there is no guarantee your rigs do not search the same nonces
+* creating a unique continuous search segment instead of letting every rig to search on it's own random segment
+* having a single point dashboard to control your overall hashing power capacity
+* leverage the API functions of neth-proxy and ethminer combined to control all of your machines
+
+## Why you may NOT want to use it
+
+* Developer fee
+* Using a proxy you create a single point of failure on your connections. If your proxy host fails then all of your machines get disconnected
+
+To mitigate the latter I suggest to have two instances of neth-proxy running on different hosts and configure your ethminer clients to connect to both of them (primary and failover).
+
 ## Developer Fees
 
 Usage of neth-proxy comes with a fee of 0.75% which means your connected miners will mine for the developer for 30 seconds every 4000 seconds (roughly 1 hour and 7 minutes).
 If you do not want to pay such a fee you can set `--no-fee` command line argument on launch. This will make neth-proxy absolutely free but it won't do any segment adjustment for your miners nor it will check they do not overlap.
-In any case you will get better results than with eth-proxy.
+**In any case you will get better results than with eth-proxy.**
 Alternatively you can modify source code and rebuild the binaries on your own.
 
 If you wish to make a direct donation you're welcome to use either theese addresses:
@@ -38,7 +55,10 @@ All connected miner **must** be [ethminer](https://github.com/ethereum-mining/et
 **Important. This proxy is NOT a tool to steal or reduce developer's fees for other miners**
 
 ## Who uses neth-proxy
-Well actually me and my clients. Maybe if you want to submit a review I will publish it.
+Well actually me and my clients. I have experienced sensible increases in my efficiency and lowered my payout times.
+There is no guarantee I am offering about any gain and your mileage may vary.
+If you want to give neth-proxy a try and want to share your measurements I suggest to run for at least 24 hours.
+I commit myself to publish any serious review regardless positive or negative results.
 
 ## How to get started with neth-proxy
 1. Install [.NET Core 2.0+](https://github.com/dotnet/core) runtime 
