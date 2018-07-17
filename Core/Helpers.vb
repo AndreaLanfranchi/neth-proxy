@@ -270,16 +270,20 @@ Namespace Core
         ''' </summary>
         ''' <param name="value">A hexadecimal string</param>
         ''' <returns></returns>
-        Public Function H66(value As String) As String
+        Public Function ToHex64(value As String) As String
 
-            Dim retVar As BigInteger = BigInteger.Zero
+            Dim l As Integer = value.Length
+
             If value.StartsWith("0x") Then
-                value = value.Substring(3)
+                If l = 66 Then
+                    Return value
+                Else
+                    value = value.Substring(2)
+                    l = value.Length
+                End If
             End If
-            If BigInteger.TryParse(value, Globalization.NumberStyles.AllowHexSpecifier, Nothing, retVar) Then
-                Return String.Format("0x{0:x64}", retVar)
-            End If
-            Return String.Empty
+
+            Return $"0x{If(l < 64, New String("0", 64 - l), String.Empty)}{value}"
 
         End Function
 

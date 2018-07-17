@@ -42,15 +42,15 @@ Namespace Core
 
             If mode = StratumModeEnum.Ethproxy Then
 
-                Header = arr(0)
-                Seed = arr(1)
-                Target = arr(2)
+                Header = ToHex64(arr(0))
+                Seed = ToHex64(arr(1))
+                Target = ToHex64(arr(2))
 
             ElseIf mode = StratumModeEnum.Stratum Then
 
-                Header = arr(1)
-                Seed = arr(2)
-                Target = arr(3)
+                Header = ToHex64(arr(1))
+                Seed = ToHex64(arr(2))
+                Target = ToHex64(arr(3))
 
             End If
 
