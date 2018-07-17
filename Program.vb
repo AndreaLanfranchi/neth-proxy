@@ -458,11 +458,10 @@ Module Program
     Sub StartProxy()
 
         ' Start working
-        ' ThreadPool.QueueUserWorkItem(New Threading.WaitCallback(AddressOf App.Start))
-        ' Dim thListener As Threading.Thread = New Threading.Thread(AddressOf App.PoolMgr.Start)
-        App.Instance.Start()
 
-        'thListener.Start()
+        Dim workThread As Threading.Thread = New Threading.Thread(AddressOf App.Instance.Start)
+        workThread.Start()
+
         If App.Instance.Settings.NoConsole Then
 
             AddHandler AssemblyLoadContext.Default.Unloading, AddressOf OnSignalReceived
