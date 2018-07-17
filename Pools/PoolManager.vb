@@ -44,7 +44,7 @@ Namespace Pools
         Private _currentPool As Pool
         Private _stratumMode As StratumModeEnum = StratumModeEnum.Undefined
 
-        Private _jobHeaders As New SlidingQueue(Of String)(5)                           ' Keeps track of last 5 jobs received
+        Private _jobHeaders As New SlidingQueue(Of String)(10)                           ' Keeps track of last 10 jobs received
         Public Property CurrentJob As Core.Job
         Private _currentDiff As Double = 0
 
@@ -354,6 +354,8 @@ Namespace Pools
 
             Logger.Log(1, $"DevFee stopped. Ran for {ranForSeconds.ToString} seconds.", _context)
 
+            If Not IsConnected Then Return
+
             ' Restore normal operations
             Select Case StratumMode
                 Case StratumModeEnum.Stratum
@@ -496,16 +498,6 @@ Namespace Pools
         ''' </summary>
         Protected Sub Disconnect()
 
-            CurrentJob = Nothing
-            _currentDiff = 0
-            _jobHeaders.Clear()
-            _currentPool.IsFeeAuthorized = False
-
-            If Not String.IsNullOrEmpty(_devAddress) Then
-                StopDevFee()
-            End If
-
-            If _jobTimeoutTimer IsNot Nothing Then _jobTimeoutTimer.Stop()
             _socket.Disconnect()
 
         End Sub
@@ -514,26 +506,22 @@ Namespace Pools
         ''' Submits solution to pool
         ''' </summary>
         ''' <param name="jsonSolution">The <see cref="Json.JsonObject"/> holding the solution sent by worker</param>
-        Public Function SubmitSolution(jsonSolutionMessage As JsonObject, originClient As Clients.Client) As Integer
+        Public Sub SubmitSolution(jsonSolutionMessage As JsonObject, originClient As Clients.Client)
 
-            ' Return codes 
-            ' 0 - Wasted (no connection or not authorized)
-            ' 1 - Submitted
-            ' 2 - Submitted Stale
-
-            Dim retVar As Integer = 0
-            If Not _isRunning Then Return retVar
+            If (_isRunning = False OrElse IsAuthorized = False OrElse _jobHeaders.Contains(jsonSolutionMessage("params")(3)) = False) Then
+                Interlocked.Increment(originClient.SolutionsRejected)
+                Return
+            End If
 
             ' Assuming a first in first out queue for solutions
             ' each stop watch should keep amount for accepted/rejected response
             SyncLock _lockObj
 
-                If Not IsAuthorized Then Return retVar
-
                 ' Check if Stale Solution and remove provided worker from client
                 ' Also ensure id = 4 ... we need this
                 jsonSolutionMessage("id") = 4
                 Dim isStale As Boolean = False
+                Dim pIdx As Integer = 2
                 If CurrentJob IsNot Nothing Then
                     If CurrentJob.Header.IndexOf(jsonSolutionMessage("params")(3).ToString.Replace("""", String.Empty)) < 0 Then
                         isStale = True
@@ -552,6 +540,7 @@ Namespace Pools
                         jsonSolutionMessage("params")(4)
                     })
                     jsonSolutionMessage("params") = newParams
+                    pIdx = 0
 
                 Else
 
@@ -569,9 +558,12 @@ Namespace Pools
                 ' We assume solutions are accepted FIFO style
                 _submissionsQueue.Enqueue(New SubmissionEntry With {.TimeStamp = DateTime.Now, .OriginClient = originClient, .OriginId = jsonSolutionMessage("id")})
 
+                Interlocked.Increment(_telemetry.TotalSolutionsSubmitted)
+                Interlocked.Increment(_currentPool.SolutionsSubmitted)
                 If isStale Then
                     Interlocked.Increment(_telemetry.TotalKnownStaleSolutions)
                     Interlocked.Increment(_currentPool.KnownStaleSolutions)
+                    Interlocked.Increment(originClient.KnownStaleSolutions)
                 End If
 
                 ' Log submission & start response timer
@@ -583,19 +575,13 @@ Namespace Pools
                     _responseTimeoutTimer.Interval = _settings.PoolsResponseTimeout
                     _responseTimeoutTimer.Start()
                 End If
-                Logger.Log(6, originClient.WorkerOrId + If(isStale, " stale", String.Empty) + " nonce " + jsonSolutionMessage("params")(2).ToString, "Worker")
 
-                Interlocked.Increment(_telemetry.TotalSolutionsSubmitted)
-                Interlocked.Increment(_currentPool.SolutionsSubmitted)
+                Logger.Log(6, originClient.WorkerOrId + If(isStale, " stale", String.Empty) + " nonce " + jsonSolutionMessage("params")(pIdx).ToString, "Worker")
 
-                retVar += 1
-                If isStale Then retVar += 1
 
             End SyncLock
 
-            Return retVar
-
-        End Function
+        End Sub
 
         ''' <summary>
         ''' Submits Hashrate to pool
@@ -846,10 +832,6 @@ Namespace Pools
                                 responseTime = DateTime.Now.Subtract(sentEntry.TimeStamp)
                                 _telemetry.ResponseTimes.Enqueue(responseTime.TotalMilliseconds)
 
-                                ' Report back to client same result 
-                                ' received from pool
-                                sentEntry.OriginClient.Send(message)
-
                             End If
 
                             If isSuccess Then
@@ -859,6 +841,9 @@ Namespace Pools
                             Else
                                 Interlocked.Increment(_telemetry.TotalSolutionsRejected)
                                 Interlocked.Increment(_currentPool.SolutionsRejected)
+                                If sentEntry.OriginClient IsNot Nothing Then
+                                    Interlocked.Increment(sentEntry.OriginClient.SolutionsRejected)
+                                End If
                                 If Not String.IsNullOrEmpty(errorReason) Then
                                     Logger.Log(0, String.Format("Received error from pool : {0}", errorReason), _context)
                                 End If
@@ -1147,25 +1132,19 @@ Namespace Pools
                 _poolStatus.UnsetFlags({PoolStatus.Connected, PoolStatus.Authorized, PoolStatus.Subscribed})
             End SyncLock
 
-            ' Flush queue of submission times for nonces
-            ' as we won't receive answers for pending submissions
-            ' also inform clients 
-            Dim item As SubmissionEntry = Nothing
-            While _submissionsQueue.Count > 0
-                If _submissionsQueue.TryDequeue(item) Then
-                    Dim jresponse As New Json.JsonObject
-                    jresponse("id") = item.OriginId
-                    jresponse("jsonrpc") = "2.0"
-                    jresponse("result") = False
+            ' Stop activity and flush queues
+            If _responseTimeoutTimer IsNot Nothing Then _responseTimeoutTimer.Stop()
+            If _jobTimeoutTimer IsNot Nothing Then _jobTimeoutTimer.Stop()
 
-                    Try
-                        item.OriginClient.Send(jresponse.ToString())
-                    Catch ex As Exception
-                        ' May be already disposed
-                    End Try
+            _submissionsQueue.Clear()
+            _jobHeaders.Clear()
 
-                End If
-            End While
+            CurrentJob = Nothing
+            _currentDiff = 0
+            _currentPool.IsFeeAuthorized = False
+            If IsFeeOn Then
+                StopDevFee()
+            End If
 
             If Not _isRunning Then Return
 
