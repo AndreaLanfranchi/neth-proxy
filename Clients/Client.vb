@@ -422,9 +422,7 @@ Namespace Clients
 
                     ' Prevent submission if not authorized
                     If Not IsAuthorized Then
-                        If IsConnected Then
-                            _socket.Send(NewJsonRpcResErr(msgId, "Not Authorized").ToString)
-                        End If
+                        _socket.Send(NewJsonRpcResErr(msgId, "Not Authorized").ToString)
                         Return
                     End If
 
@@ -433,12 +431,14 @@ Namespace Clients
                     ' If user has set ethminer with --noeval there is no need to
                     ' recheck here.
 
-                    ' Submit to pool & Aknowledge worker
+                    ' Accept solution immediately to prevent client
+                    ' to fall into --response-timeout
                     LastSubmittedTimestamp = DateTime.Now
                     Interlocked.Increment(SolutionsSubmitted)
-                    If (_poolmgr.SubmitSolution(jsonMsg, Me)) = 2 Then
-                        Interlocked.Increment(KnownStaleSolutions)
-                    End If
+                    _socket.Send(NewJsonRpcResOk(msgId))
+
+                    ' Submit to pool 
+                    _poolmgr.SubmitSolution(jsonMsg, Me)
 
 
                 Case msgMethod = "eth_submitHashrate"
