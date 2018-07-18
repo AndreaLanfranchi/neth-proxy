@@ -160,10 +160,14 @@ Namespace Sockets
         ''' <returns>A <see cref="TimeSpan"/></returns>
         Public ReadOnly Property IdleDuration As TimeSpan
             Get
-                If _lastInboundTimeStamp >= _lastOutboundTimeStamp Then
-                    Return DateTime.Now.Subtract(_lastInboundTimeStamp)
+                If Not IsConnected Then
+                    Return New TimeSpan(0)
                 Else
-                    Return DateTime.Now.Subtract(_lastOutboundTimeStamp)
+                    If _lastInboundTimeStamp >= _lastOutboundTimeStamp Then
+                        Return DateTime.Now.Subtract(_lastInboundTimeStamp)
+                    Else
+                        Return DateTime.Now.Subtract(_lastOutboundTimeStamp)
+                    End If
                 End If
             End Get
         End Property
