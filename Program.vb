@@ -305,9 +305,11 @@ Module Program
                         Next
 
                         If Not pStratumLogin = String.Empty Then
-                            App.Instance.Settings.PoolsStratumLogin = pStratumLogin
-                            App.Instance.Settings.PoolsStratumPassword = pStratumPassw
-                            App.Instance.Settings.PoolsStratumWorker = pStratumWorker
+                            With App.Instance.Settings
+                                .PoolsStratumLogin = pStratumLogin
+                                .PoolsStratumPassword = pStratumPassw
+                                .PoolsStratumWorker = pStratumWorker
+                            End With
                         Else
                             argsErr.Enqueue(String.Format("Error : Stratum Login {0} is invalid", args(argIdx)))
                         End If
@@ -437,8 +439,7 @@ Module Program
         End If
         If App.Instance.Settings.NoFee = True Then
             Console.WriteLine("  --no-fee is set. No developer fee will be applied.")
-            Console.WriteLine("  Developer looses all his revenues.")
-            Console.WriteLine("  This proxy will NOT do any optimization.")
+            Console.WriteLine("  Developer looses all his revenues, you won't get any optimization.")
             Console.WriteLine(" ")
         Else
 
@@ -451,6 +452,7 @@ Module Program
         ' Start
         ' -----------------------------------------
         StartProxy()
+        Logger.Log(0, "Terminated !", "main")
         Environment.Exit(ExitCodes.Success)
 
     End Sub
@@ -522,6 +524,7 @@ Module Program
 
         End If
 
+        workThread.Join()
 
     End Sub
 
