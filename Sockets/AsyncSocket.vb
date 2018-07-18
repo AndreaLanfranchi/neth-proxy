@@ -225,13 +225,25 @@ Namespace Sockets
                 .UnsetFlags({AsyncSocketStatus.Connecting, AsyncSocketStatus.NotConnected})
             End With
 
-            With _connectionSocket
-                .LingerState = New LingerOption(False, 0)
-                .SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, True)
-                .SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, True)
-                _connectionRemoteEndPoint = ConvertToIPEndPoint(.RemoteEndPoint)
-                _connectionLocalEndPoint = ConvertToIPEndPoint(.LocalEndPoint)
-            End With
+            Try
+
+                With _connectionSocket
+                    .LingerState = New LingerOption(False, 0)
+                    .SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, True)
+                    .SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, True)
+                    _connectionRemoteEndPoint = ConvertToIPEndPoint(.RemoteEndPoint)
+                    _connectionLocalEndPoint = ConvertToIPEndPoint(.LocalEndPoint)
+                End With
+
+            Catch sex As SocketException
+
+                ' Something bad happened to remote endpoint
+                Disconnect()
+                Return
+
+            Catch ex As Exception
+
+            End Try
 
             SetKeepAlive(_connectionSocket, 300000, 30000)
 
@@ -559,19 +571,19 @@ Namespace Sockets
                         If e.SocketError = SocketError.Success Then
 
                             Logger.Log(7, String.Format("Connected to {0}", e.RemoteEndPoint.ToString), _context)
-                            ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf OnConnected))
+                            Call OnConnected()
 
                         Else
 
                             Logger.Log(7, String.Format("Connection to {0} failed [ {1} ]", e.RemoteEndPoint.ToString, [Enum].GetName(GetType(SocketError), e.SocketError).ToString()), _context)
-                            ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf OnConnectionFailed))
+                            Call OnConnectionFailed()
 
                         End If
 
                     Case SocketAsyncOperation.Disconnect
 
                         Logger.Log(7, String.Format("Disconnected from {0}", e.RemoteEndPoint.ToString), _context)
-                        ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf OnDisconnected))
+                        Call OnDisconnected()
 
                     Case SocketAsyncOperation.Receive
 
@@ -588,7 +600,7 @@ Namespace Sockets
                                     Logger.Log(7, String.Format("{0} remotely closed connection", e.RemoteEndPoint.ToString), _context)
 
                                     ' Gracefully closes resources
-                                    Disconnect()
+                                    Call Disconnect()
                                 End If
 
                             End If
