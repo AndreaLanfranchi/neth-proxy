@@ -123,10 +123,19 @@ Namespace Core
         ''' <param name="value"></param>
         <Extension()>
         Public Sub Reset(ByRef value As Timers.Timer)
-
             value.Stop()
             value.Start()
+        End Sub
 
+        ''' <summary>
+        ''' Restarts a timer with a new interval
+        ''' </summary>
+        ''' <param name="value"></param>
+        <Extension()>
+        Public Sub Reset(ByRef value As Timers.Timer, ByVal interval As Double)
+            value.Stop()
+            value.Interval = interval
+            value.Start()
         End Sub
 
 #End Region
