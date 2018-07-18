@@ -410,7 +410,7 @@ Namespace Clients
 
                         Dim jReq As New JsonObject From {
                             New KeyValuePair(Of String, JsonValue)("jsonrpc", "2.0"),
-                            New KeyValuePair(Of String, JsonValue)("id", 2),
+                            New KeyValuePair(Of String, JsonValue)("id", 1),
                             New KeyValuePair(Of String, JsonValue)("method", "miner_ping")
                             }
                         SendAPIMessage(jReq.ToString)
@@ -586,14 +586,14 @@ Namespace Clients
         ''' </summary>
         Private Sub ProcessAPIResponse(ByVal message As String)
 
-            Dim jsonMsg As JsonObject = Nothing
+            Dim jsonMsg As New JsonObject
             Dim msgId As Integer = 0
             Dim msgResult As Boolean = False
             Dim msgError As String = String.Empty
 
             Try
 
-                jsonMsg = JsonValue.Parse(message)
+                jsonMsg = JsonObject.Parse(message)
                 With jsonMsg
                     If .ContainsKey("id") Then .TryGetValue("id", msgId)
                     If .ContainsKey("error") AndAlso .Item("error") IsNot Nothing Then
@@ -641,7 +641,7 @@ Namespace Clients
                         New KeyValuePair(Of String, JsonValue)("method", "miner_getscramblerinfo")
                         }
                         _apiScrambleInfoPending = True
-                        ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf SendAPIMessage), jReq.ToString)
+                        SendAPIMessage(jReq.ToString)
                     End If
 
                 Case 2
@@ -803,7 +803,7 @@ Namespace Clients
         Public Sub SendAPIMessage(message As String)
 
             ' Do not enter if not possible to communicate
-            If Not IsConnected OrElse _apiEndPoint Is Nothing Then Return
+            If Not IsConnected OrElse ApiEndPoint Is Nothing Then Return
 
             _apiMessagesQueue.Enqueue(message)
             If Not IsAPIConnected Then
@@ -853,8 +853,8 @@ Namespace Clients
                                     New KeyValuePair(Of String, JsonValue)("id", 4),
                                     New KeyValuePair(Of String, JsonValue)("method", "miner_getstathr")
                                 }
-                    ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf SendAPIMessage), jReq.ToString)
                     _apiInfoPending = True
+                    SendAPIMessage(jReq.ToString)
                 End If
             End If
 
@@ -866,6 +866,7 @@ Namespace Clients
                         New KeyValuePair(Of String, JsonValue)("method", "miner_getscramblerinfo")
                         }
                     _apiScrambleInfoPending = True
+                    SendAPIMessage(jReq.ToString)
                 End If
             End If
 
@@ -932,7 +933,7 @@ Namespace Clients
             ' Disconnect client after 5 failed connection attempts
             Interlocked.Increment(ApiConnectionAttempts)
             If ApiConnectionAttempts >= 4 Then
-                Logger.Log(1, $"Client {WorkerOrId} does not have a respondig API interface. Disconnecting.")
+                Logger.Log(0, $"Client {WorkerOrId} does not have a respondig API interface. Disconnecting.")
                 ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf Disconnect))
             End If
 
@@ -940,7 +941,7 @@ Namespace Clients
 
         Private Sub OnApiSocketDisconnected(ByRef sender As AsyncSocket) Handles _apisocket.Disconnected
 
-            Logger.Log(3, String.Format("Client {0} API interface disconnected", WorkerOrId), _context)
+            Logger.Log(7, String.Format("Client {0} API interface disconnected", WorkerOrId), _context)
 
         End Sub
 
@@ -970,33 +971,28 @@ Namespace Clients
 
                 ' Force disconnection
                 Logger.Log(1, String.Format("{0} has been idle for more than 1 minute. Disconnecting.", WorkerOrId), _context)
-                ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf Disconnect))
                 _scheduleRunning = False
+                Disconnect()
                 Return
 
             End If
 
             ' -----------------------------------------------------------
-            ' Check API segment width and overlaps every 3 minutes
+            ' Disconnect API if idle
             ' -----------------------------------------------------------
-            If ApiScrambleInfo Is Nothing OrElse DateTime.Now.Subtract(ApiScrambleInfo.TimeStamp).TotalMinutes >= 3 Then
-                ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf CheckWorkerSegment))
-            Else
-                ' Disconnect API interface if idle for more than 15 seconds.
-                If _apisocket IsNot Nothing AndAlso _apisocket.IdleDuration.TotalSeconds >= 15 Then
-                    ThreadPool.QueueUserWorkItem(New WaitCallback(AddressOf StopApiConnection))
-                End If
+            If _apisocket IsNot Nothing AndAlso _apisocket.IdleDuration.TotalSeconds >= 15 Then
+                StopApiConnection()
             End If
+
+            ' -----------------------------------------------------------
+            ' Disconnect API if idle
+            ' -----------------------------------------------------------
+            CheckWorkerSegment()
 
             ' -----------------------------------------------------------
             ' Eventually resubmit scheduler
             ' -----------------------------------------------------------
-            With _scheduleTimer
-                .Interval = (GetRandom(1000, 3000) * 10)
-                .AutoReset = False
-                .Enabled = True
-            End With
-
+            _scheduleTimer.Reset((GetRandom(1000, 3000) * 10))
             _scheduleRunning = False
 
         End Sub
