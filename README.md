@@ -31,6 +31,7 @@ If you're on a single rig you will not get any advantage from using neth-proxy. 
 
 ## Why you may NOT want to use it
 
+* You have only 1 rig. There is no point nor advantage in using a proxy with only 1 mining instance
 * Developer fee
 * Using a proxy you create a single point of failure on your connections. If your proxy host fails then all of your machines get disconnected
 
