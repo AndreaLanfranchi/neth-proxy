@@ -137,7 +137,7 @@ C:\neth-proxy.bat [command line args]
 ```
 
 Now you can set your [ethminer](https://github.com/ethereum-mining/ethminer) miners to connect to your local proxy.
-**Please NOTE ethminer 0.15.rc2 is minimum required versio with api enabled**
+**Please NOTE ethminer 0.15.rc2 is minimum required version with api enabled**
 
 Syntax for connection is :
 ```
